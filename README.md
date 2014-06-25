@@ -1,0 +1,4 @@
+YoshiLocation
+=============
+
+Server part
