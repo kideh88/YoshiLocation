@@ -54,6 +54,19 @@ class Yoshi {
         return $arrReponse;
     }
 
+    public function getTraceStack($intTraces) {
+        date_default_timezone_set('Europe/Copenhagen');
+        $arrReponse = array();
+        $strTraceLocation = "SELECT `latitude`, `longitude` FROM ". $this->_strTablePrefix . "location "
+            . "ORDER BY `time` DESC LIMIT :limit";
+        $objTracePDO = $this->_pdo->prepare($strTraceLocation);
+        $objTracePDO->bindValue(':limit', $intTraces, PDO::PARAM_INT);
+
+        if($objTracePDO->execute()) {
+            $arrReponse = $objTracePDO->fetchAll(PDO::FETCH_ASSOC);
+        }
+        return $arrReponse;
+    }
 
     // Calculates the distance between 2 locations
     private function _calculatePointDistance($lat1, $lon1, $lat2, $lon2, $unit) {

@@ -3,8 +3,15 @@
     $strProjectPath = $_SERVER['DOCUMENT_ROOT'] . '/yoshi-app';
 
     require_once($strProjectPath . '/classes/Yoshi.class.php');
+    if(array_key_exists('traces', $_GET)) {
+        $intTraces = (int)$_GET['traces'];
+    }
+    else {
+        $intTraces = 100;
+    }
     $objYoshiClass = new Yoshi($strProjectPath);
     $arrPostion = $objYoshiClass->getLastKnownLocation();
+    $arrTraceStack = $objYoshiClass->getTraceStack($intTraces);
     ?>
     <!DOCTYPE html>
     <html>
@@ -32,15 +39,40 @@
             var map;
             var myLatitude = 55.615973;
             var myLongitude = 12.078144;
+            var blnSetCenterToYoshi = <? if(empty($arrPostion)) { echo "false"; } else { echo "true"; }; ?>;
 
             function initialize() {
 
+                var centerLatlng;
+                if(blnSetCenterToYoshi) {
+                    centerLatlng = new google.maps.LatLng(<? echo $arrPostion['latitude'] . ", " . $arrPostion['longitude']; ?>);
+                }
+                else {
+                    centerLatlng = new google.maps.LatLng(myLatitude,myLongitude);
+                }
                 var mapOptions = {
-                    center: new google.maps.LatLng(myLatitude, myLongitude),
-                    zoom: 20,
+                    center: centerLatlng,
+                    zoom: 19,
                     mapTypeId: google.maps.MapTypeId.SATELLITE
                 };
                 map = new google.maps.Map(document.getElementById("mapCurrentLocation"), mapOptions);
+
+                <?php if(!empty($arrTraceStack)) { ?>
+                var flightPlanCoordinates = [
+                    <?php foreach($arrTraceStack as $arrTraceLocation) {
+                        echo "new google.maps.LatLng(".$arrTraceLocation['latitude'].", ".$arrTraceLocation['longitude']."),";
+                    } ?>
+                ];
+                var flightPath = new google.maps.Polyline({
+                    path: flightPlanCoordinates,
+                    geodesic: true,
+                    strokeColor: '#10ff20',
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2
+                });
+
+                flightPath.setMap(map);
+                <? } ?>
 
                 var myLatlng = new google.maps.LatLng(myLatitude,myLongitude);
                 var myPostitionMarker = new google.maps.Marker({
